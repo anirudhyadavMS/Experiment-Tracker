@@ -8,9 +8,11 @@
     "dev:frontend": "react-scripts start",
     "build:backend": "tsc",
     "build:frontend": "react-scripts build",
-    "build": "npm run build:backend && npm run build:frontend",
+    "build": "npm run build:frontend && npm run build:backend",
     "test": "jest",
-    "start": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+    "start": "node dist/backend/server.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "postinstall": "npm run build"
   },
   "keywords": ["experiment", "tracking", "dashboard", "react", "express"],
   "author": "",
