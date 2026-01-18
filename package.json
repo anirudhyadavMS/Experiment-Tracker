@@ -11,8 +11,7 @@
     "build": "npm run build:frontend && npm run build:backend",
     "test": "jest",
     "start": "node dist/backend/server.js",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "postinstall": "npm run build"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
   },
   "keywords": ["experiment", "tracking", "dashboard", "react", "express"],
   "author": "",
