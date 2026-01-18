@@ -1,13 +1,13 @@
 import React from 'react';
-import { Experiment } from '../../shared/types';
+import { Experiment, SortOptions } from '../../shared/types';
 import ExperimentCard from './ExperimentCard';
 
 interface ExperimentListProps {
   experiments: Experiment[];
   onEdit: (experiment: Experiment) => void;
   onDelete: (id: string) => void;
-  onSort: (field: string) => void;
-  sortField?: string;
+  onSort: (field: SortOptions['field']) => void;
+  sortField?: SortOptions['field'];
   sortOrder?: 'asc' | 'desc';
 }
 

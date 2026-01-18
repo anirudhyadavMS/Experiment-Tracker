@@ -37,7 +37,7 @@ export interface FilterCriteria {
 }
 
 export interface SortOptions {
-  field: 'name' | 'startDate' | 'endDate' | 'status' | 'owner' | 'createdAt';
+  field: 'name' | 'startDate' | 'endDate' | 'status' | 'owner' | 'createdAt' | 'decision';
   order: 'asc' | 'desc';
 }
 
