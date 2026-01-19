@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import experimentsController from '../controllers/experimentsController';
+import { exportToPowerPoint } from '../controllers/exportController';
 
 const router = Router();
 
@@ -10,5 +11,8 @@ router.get('/experiments/:id', experimentsController.getExperimentById.bind(expe
 router.post('/experiments', experimentsController.createExperiment.bind(experimentsController));
 router.put('/experiments/:id', experimentsController.updateExperiment.bind(experimentsController));
 router.delete('/experiments/:id', experimentsController.deleteExperiment.bind(experimentsController));
+
+// Export routes
+router.get('/export/powerpoint', exportToPowerPoint);
 
 export default router;
