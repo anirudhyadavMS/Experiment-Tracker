@@ -8,7 +8,7 @@
     "dev:frontend": "react-scripts start",
     "build:backend": "tsc",
     "build:frontend": "react-scripts build",
-    "build": "npm install --production=false && npm run build:frontend && npm run build:backend",
+    "build": "npm run build:frontend && npm run build:backend",
     "test": "jest",
     "start": "node dist/backend/server.js",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""

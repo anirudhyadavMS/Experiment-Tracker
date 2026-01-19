@@ -1,6 +1,6 @@
 build:
   runScript: |
-    npm install --production=false
+    npm install --production=false --legacy-peer-deps
     npm run build
 
 run:
