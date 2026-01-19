@@ -80,7 +80,7 @@ export const exportToPowerPoint = async (req: Request, res: Response) => {
       return acc;
     }, {});
 
-    const summaryData = [
+    const summaryData: any[][] = [
       ['Status', 'Count'],
       ['Running', String(statusCounts.running || 0)],
       ['Completed', String(statusCounts.completed || 0)],
@@ -88,7 +88,7 @@ export const exportToPowerPoint = async (req: Request, res: Response) => {
       ['Total', String(experiments.length)]
     ];
 
-    summarySlide.addTable(summaryData, {
+    summarySlide.addTable(summaryData as any, {
       x: 1.5,
       y: 1.5,
       w: 7,
@@ -156,13 +156,13 @@ export const exportToPowerPoint = async (req: Request, res: Response) => {
       yPos += 1.1;
 
       // Owner and Dates
-      const detailsData = [
+      const detailsData: any[][] = [
         ['Owner', experiment.owner],
         ['Start Date', new Date(experiment.startDate).toLocaleDateString()],
         ['End Date', experiment.endDate ? new Date(experiment.endDate).toLocaleDateString() : 'Ongoing']
       ];
 
-      slide.addTable(detailsData, {
+      slide.addTable(detailsData as any, {
         x: 0.5,
         y: yPos,
         w: 4.5,
@@ -231,12 +231,12 @@ export const exportToPowerPoint = async (req: Request, res: Response) => {
           color: '666666'
         });
 
-        const variantsData = [
+        const variantsData: any[][] = [
           ['Name', 'Description', 'Traffic %'],
           ...experiment.variants.map(v => [v.name, v.description, `${v.percentage}%`])
         ];
 
-        slide.addTable(variantsData, {
+        slide.addTable(variantsData as any, {
           x: 0.5,
           y: yPos + 0.35,
           w: 9,
