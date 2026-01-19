@@ -77,6 +77,40 @@ const Dashboard: React.FC = () => {
     clearFilters();
   };
 
+  const handleExportPowerPoint = async () => {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/export/powerpoint`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      // Get the blob from response
+      const blob = await response.blob();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `experiments_${new Date().toISOString().split('T')[0]}.pptx`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export to PowerPoint:', error);
+      alert('Failed to export experiments to PowerPoint. Please try again.');
+    }
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -84,15 +118,24 @@ const Dashboard: React.FC = () => {
           <h1>Product Feature Experiments</h1>
           <p className="subtitle">Track and manage your product experiments</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingExperiment(undefined);
-            setShowForm(true);
-          }}
-          className="btn-primary btn-new"
-        >
-          + New Experiment
-        </button>
+        <div className="header-actions">
+          <button
+            onClick={handleExportPowerPoint}
+            className="btn-secondary btn-export"
+            disabled={experiments.length === 0}
+          >
+            📊 Export to PPT
+          </button>
+          <button
+            onClick={() => {
+              setEditingExperiment(undefined);
+              setShowForm(true);
+            }}
+            className="btn-primary btn-new"
+          >
+            + New Experiment
+          </button>
+        </div>
       </header>
 
       {showForm && (
