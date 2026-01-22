@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Experiment, Variant } from '../../shared/types';
+import { useSquads } from '../hooks/useSquads';
 
 interface ExperimentFormProps {
   experiment?: Experiment;
   onSubmit: (experiment: Experiment) => void;
   onCancel: () => void;
+  defaultSquadId?: string;
 }
 
 const ExperimentForm: React.FC<ExperimentFormProps> = ({
   experiment,
   onSubmit,
-  onCancel
+  onCancel,
+  defaultSquadId
 }) => {
+  const { squads, fetchSquads } = useSquads();
+
   const [formData, setFormData] = useState<Partial<Experiment>>({
     name: '',
     description: '',
@@ -22,8 +27,13 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({
     successMetrics: [''],
     targetAudience: '',
     variants: [{ name: 'Control', description: '', percentage: 50 }],
-    decision: 'pending'
+    decision: 'pending',
+    squadId: defaultSquadId || undefined
   });
+
+  useEffect(() => {
+    fetchSquads();
+  }, [fetchSquads]);
 
   useEffect(() => {
     if (experiment) {
@@ -32,8 +42,10 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({
         startDate: experiment.startDate ? new Date(experiment.startDate).toISOString().split('T')[0] : '',
         endDate: experiment.endDate ? new Date(experiment.endDate).toISOString().split('T')[0] : undefined
       });
+    } else if (defaultSquadId) {
+      setFormData(prev => ({ ...prev, squadId: defaultSquadId }));
     }
-  }, [experiment]);
+  }, [experiment, defaultSquadId]);
 
   const handleInputChange = (field: keyof Experiment, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -131,6 +143,21 @@ const ExperimentForm: React.FC<ExperimentFormProps> = ({
               <option value="paused">Paused</option>
             </select>
           </div>
+        </div>
+
+        <div className="form-group">
+          <label>Squad (Optional)</label>
+          <select
+            value={formData.squadId || ''}
+            onChange={(e) => handleInputChange('squadId', e.target.value || undefined)}
+          >
+            <option value="">No squad assigned</option>
+            {squads.map((squad) => (
+              <option key={squad._id} value={squad._id}>
+                Squad {squad.squadNumber} - {squad.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="form-row">

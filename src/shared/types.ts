@@ -15,6 +15,7 @@ export interface Experiment {
   businessImpact?: string;
   confidenceLevel?: 'low' | 'medium' | 'high';
   decision?: 'go' | 'no-go' | 'pending';
+  squadId?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
@@ -23,6 +24,32 @@ export interface Variant {
   name: string;
   description: string;
   percentage: number;
+}
+
+export interface SquadMember {
+  name: string;
+  role: string;
+}
+
+export interface Squad {
+  _id?: string;
+  squadNumber: number;
+  name: string;
+  members: SquadMember[];
+  targetNumber: number;
+  targetDescription: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface SquadStatistics {
+  squadId: string;
+  squadName: string;
+  squadNumber: number;
+  totalExperiments: number;
+  runningExperiments: number;
+  completedExperiments: number;
+  pausedExperiments: number;
 }
 
 export interface FilterCriteria {
@@ -34,6 +61,7 @@ export interface FilterCriteria {
   endDateTo?: Date | string;
   decision?: 'go' | 'no-go' | 'pending';
   confidenceLevel?: 'low' | 'medium' | 'high';
+  squadId?: string;
 }
 
 export interface SortOptions {

@@ -1,28 +1,62 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useExperiments } from '../hooks/useExperiments';
 import { useFilters } from '../hooks/useFilters';
+import { squadApi } from '../services/api';
 import ExperimentList from '../components/ExperimentList';
 import ExperimentFilters from '../components/ExperimentFilters';
 import ExperimentForm from '../components/ExperimentForm';
 import SearchBar from '../components/SearchBar';
 import { experimentApi } from '../services/api';
-import { Experiment } from '../../shared/types';
+import { Experiment, Squad } from '../../shared/types';
 
-const Dashboard: React.FC = () => {
+const SquadDashboard: React.FC = () => {
+  const { squadId } = useParams<{ squadId: string }>();
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [editingExperiment, setEditingExperiment] = useState<Experiment | undefined>();
+  const [squad, setSquad] = useState<Squad | null>(null);
+  const [loadingSquad, setLoadingSquad] = useState(true);
   const { experiments, loading, error, total, page, fetchExperiments } = useExperiments();
   const { filters, sort, searchQuery, clearFilters, updateSort, setSearchQuery, setFilters } = useFilters();
 
+  // Fetch squad details
   useEffect(() => {
-    fetchExperiments(filters, sort, searchQuery, page);
-  }, [filters, sort, searchQuery, page, fetchExperiments]);
+    const loadSquad = async () => {
+      if (!squadId) return;
+
+      try {
+        setLoadingSquad(true);
+        const response = await squadApi.getSquadById(squadId);
+        setSquad(response.data);
+      } catch (err) {
+        console.error('Failed to load squad:', err);
+        alert('Failed to load squad. Redirecting to squads page.');
+        navigate('/');
+      } finally {
+        setLoadingSquad(false);
+      }
+    };
+
+    loadSquad();
+  }, [squadId, navigate]);
+
+  // Fetch experiments for this squad
+  useEffect(() => {
+    if (squadId) {
+      const squadFilters = { ...filters, squadId };
+      fetchExperiments(squadFilters, sort, searchQuery, page);
+    }
+  }, [squadId, filters, sort, searchQuery, page, fetchExperiments]);
 
   const handleCreateExperiment = async (experiment: Experiment) => {
     try {
-      await experimentApi.createExperiment(experiment);
+      // Ensure the experiment is assigned to this squad
+      const experimentData = { ...experiment, squadId };
+      await experimentApi.createExperiment(experimentData);
       setShowForm(false);
-      fetchExperiments(filters, sort, searchQuery, page);
+      const squadFilters = { ...filters, squadId };
+      fetchExperiments(squadFilters, sort, searchQuery, page);
     } catch (error) {
       console.error('Failed to create experiment:', error);
       alert('Failed to create experiment. Please try again.');
@@ -35,7 +69,8 @@ const Dashboard: React.FC = () => {
         await experimentApi.updateExperiment(experiment._id, experiment);
         setShowForm(false);
         setEditingExperiment(undefined);
-        fetchExperiments(filters, sort, searchQuery, page);
+        const squadFilters = { ...filters, squadId };
+        fetchExperiments(squadFilters, sort, searchQuery, page);
       }
     } catch (error) {
       console.error('Failed to update experiment:', error);
@@ -47,7 +82,8 @@ const Dashboard: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) {
       try {
         await experimentApi.deleteExperiment(id);
-        fetchExperiments(filters, sort, searchQuery, page);
+        const squadFilters = { ...filters, squadId };
+        fetchExperiments(squadFilters, sort, searchQuery, page);
       } catch (error) {
         console.error('Failed to delete experiment:', error);
         alert('Failed to delete experiment. Please try again.');
@@ -77,55 +113,29 @@ const Dashboard: React.FC = () => {
     clearFilters();
   };
 
-  const handleExportPowerPoint = async () => {
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL || '/api';
-      const response = await fetch(`${apiUrl}/export/powerpoint`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+  if (loadingSquad) {
+    return <div className="loading">Loading squad...</div>;
+  }
 
-      if (!response.ok) {
-        throw new Error('Export failed');
-      }
-
-      // Get the blob from response
-      const blob = await response.blob();
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `experiments_${new Date().toISOString().split('T')[0]}.pptx`;
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to export to PowerPoint:', error);
-      alert('Failed to export experiments to PowerPoint. Please try again.');
-    }
-  };
+  if (!squad) {
+    return <div className="error">Squad not found</div>;
+  }
 
   return (
-    <div className="dashboard">
+    <div className="squad-dashboard">
       <header className="dashboard-header">
         <div className="header-content">
-          <h1>All Experiments</h1>
-          <p className="subtitle">View and manage experiments across all squads</p>
+          <div className="breadcrumb">
+            <button onClick={() => navigate('/')} className="breadcrumb-link">
+              Squads
+            </button>
+            <span className="breadcrumb-separator">/</span>
+            <span>Squad {squad.squadNumber}</span>
+          </div>
+          <h1>{squad.name}</h1>
+          <p className="subtitle">Manage experiments for this squad</p>
         </div>
         <div className="header-actions">
-          <button
-            onClick={handleExportPowerPoint}
-            className="btn-secondary btn-export"
-            disabled={experiments.length === 0}
-          >
-            📊 Export to PPT
-          </button>
           <button
             onClick={() => {
               setEditingExperiment(undefined);
@@ -145,13 +155,36 @@ const Dashboard: React.FC = () => {
               experiment={editingExperiment}
               onSubmit={editingExperiment ? handleUpdateExperiment : handleCreateExperiment}
               onCancel={handleFormCancel}
+              defaultSquadId={squadId}
             />
           </div>
         </div>
       )}
 
       <div className="dashboard-content">
-        <aside className="sidebar">
+        <aside className="sidebar squad-sidebar">
+          <div className="squad-info-card">
+            <h3>Squad Details</h3>
+            <div className="squad-detail">
+              <span className="label">Squad Number:</span>
+              <span className="value">{squad.squadNumber}</span>
+            </div>
+            <div className="squad-detail">
+              <span className="label">Target:</span>
+              <span className="value">{squad.targetNumber} {squad.targetDescription}</span>
+            </div>
+            <div className="squad-detail">
+              <span className="label">Members:</span>
+              <ul className="members-list">
+                {squad.members.map((member, index) => (
+                  <li key={index}>
+                    <strong>{member.name}</strong> - {member.role}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
           <ExperimentFilters
             filters={filters}
             onFilterChange={handleFilterChange}
@@ -177,13 +210,32 @@ const Dashboard: React.FC = () => {
           {error && (
             <div className="error">
               <p>Error: {error}</p>
-              <button onClick={() => fetchExperiments(filters, sort, searchQuery, page)}>
+              <button onClick={() => {
+                const squadFilters = { ...filters, squadId };
+                fetchExperiments(squadFilters, sort, searchQuery, page);
+              }}>
                 Retry
               </button>
             </div>
           )}
 
-          {!loading && !error && (
+          {!loading && !error && experiments.length === 0 && (
+            <div className="empty-state">
+              <h2>No Experiments Yet</h2>
+              <p>Create your first experiment for this squad.</p>
+              <button
+                onClick={() => {
+                  setEditingExperiment(undefined);
+                  setShowForm(true);
+                }}
+                className="btn-primary"
+              >
+                + New Experiment
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && experiments.length > 0 && (
             <ExperimentList
               experiments={experiments}
               onEdit={handleEdit}
@@ -199,4 +251,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default SquadDashboard;

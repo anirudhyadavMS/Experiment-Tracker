@@ -14,6 +14,7 @@ class ExperimentsController {
         endDateTo,
         decision,
         confidenceLevel,
+        squadId,
         search,
         sortField = 'createdAt',
         sortOrder = 'desc',
@@ -28,6 +29,7 @@ class ExperimentsController {
       if (owner) filter.owner = owner;
       if (decision) filter.decision = decision;
       if (confidenceLevel) filter.confidenceLevel = confidenceLevel;
+      if (squadId) filter.squadId = squadId;
 
       // Date range filters
       if (startDateFrom || startDateTo) {

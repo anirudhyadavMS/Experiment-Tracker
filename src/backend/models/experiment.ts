@@ -30,6 +30,9 @@ export interface IExperiment extends Document {
   confidenceLevel?: 'low' | 'medium' | 'high';
   decision?: 'go' | 'no-go' | 'pending';
 
+  // Squad Assignment
+  squadId?: Schema.Types.ObjectId;
+
   // Metadata
   createdAt: Date;
   updatedAt: Date;
@@ -116,6 +119,11 @@ const experimentSchema = new Schema<IExperiment>({
     type: String,
     enum: ['go', 'no-go', 'pending'],
     default: 'pending'
+  },
+  squadId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Squad',
+    required: false
   }
 }, {
   timestamps: true
@@ -124,6 +132,7 @@ const experimentSchema = new Schema<IExperiment>({
 // Indexes for filtering and sorting
 experimentSchema.index({ status: 1, startDate: -1 });
 experimentSchema.index({ owner: 1 });
+experimentSchema.index({ squadId: 1 });
 experimentSchema.index({ name: 'text', description: 'text', hypothesis: 'text' });
 
 const Experiment = model<IExperiment>('Experiment', experimentSchema);
